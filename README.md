@@ -1,17 +1,132 @@
-# foxhu_bot_offline
+# 狐狐伯特 - Offline节点
 
-A new Flutter project.
+一个基于Flutter开发的离线AI应用，支持Windows、Linux和Android平台。
 
-## Getting Started
+## 项目介绍
 
-This project is a starting point for a Flutter application.
+这是一个纯客户端的AI应用，无需网络连接即可使用。应用采用Flutter框架开发，支持跨平台运行在Windows、Linux和Android系统上。
 
-A few resources to get you started if this is your first Flutter project:
+## 主要特点
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- **离线运行**：无需网络连接，保护用户隐私
+- **跨平台支持**：支持Windows、Linux和Android系统
+- **简洁界面**：采用Material Design 3设计风格
+- **易于扩展**：模块化架构，方便后续功能扩展
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 项目结构
+
+```
+foxbot-adult/
+├── client/                  # Flutter客户端
+│   ├── lib/                # Dart源代码
+│   │   ├── main.dart       # 应用入口
+│   │   └── src/            # 源代码目录
+│   │       ├── pages/      # 页面组件
+│   ├── assets/             # 资源文件
+│   ├── test/               # 测试文件
+│   └── pubspec.yaml        # Flutter配置文件
+└── README.md               # 项目说明
+```
+
+## 安装与运行
+
+### 前置条件
+
+- 安装Flutter SDK（推荐3.0+）
+- 安装对应平台的开发环境：
+  - Windows：Visual Studio
+  - Linux：GCC/G++
+  - Android：Android Studio
+
+### 运行步骤
+
+1. 克隆或下载项目
+
+2. 进入client目录：
+   ```bash
+   cd client
+   ```
+
+3. 获取依赖：
+   ```bash
+   flutter pub get
+   ```
+
+4. 运行应用：
+   
+   - **Windows**：
+     ```bash
+     flutter run -d windows
+     ```
+   
+   - **Linux**：
+     ```bash
+     flutter run -d linux
+     ```
+   
+   - **Android**：
+     ```bash
+     flutter run -d android
+     ```
+
+## 构建发布版本
+
+### Windows
+
+```bash
+flutter build windows
+```
+
+构建后的可执行文件位于：`client/build/windows/runner/Release/`
+
+### Linux
+
+```bash
+flutter build linux
+```
+
+构建后的可执行文件位于：`client/build/linux/x64/release/bundle/`
+
+### Android
+
+```bash
+flutter build apk
+```
+
+构建后的APK文件位于：`client/build/app/outputs/flutter-apk/`
+
+## 功能说明
+
+当前版本实现了基本的AI响应功能：
+- 点击"获取AI响应"按钮
+- 应用模拟AI思考过程
+- 显示AI响应结果
+
+后续可以扩展的功能：
+- 实现真正的离线AI模型集成
+- 添加更多交互功能
+- 支持自定义AI参数
+- 添加数据持久化功能
+
+## 开发说明
+
+### 项目配置
+
+主要配置文件位于`client/pubspec.yaml`，包含应用名称、版本、依赖等信息。
+
+### 主要文件
+
+- `client/lib/main.dart`：应用入口文件
+- `client/lib/src/pages/home_page.dart`：首页组件
+
+### 编码规范
+
+项目使用Flutter官方推荐的编码规范，使用`flutter_lints`进行代码检查。
+
+## 许可证
+
+MIT License
+
+## 联系方式
+
+如有问题或建议，欢迎提交Issue或Pull Request。
