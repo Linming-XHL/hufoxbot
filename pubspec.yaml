@@ -1,0 +1,30 @@
+name: foxhu_bot_offline
+version: 1.0.0+1
+description: 狐狐伯特 - Offline节点，一个离线AI应用
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  # 重新启用http依赖，用于与OpenAI API通信
+  http: ^1.1.0
+  json_annotation: ^4.8.1
+
+  # 添加本地存储依赖
+  shared_preferences: ^2.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  build_runner: ^2.4.6
+  json_serializable: ^6.7.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/fonts/
+    - assets/personality/default.txt
