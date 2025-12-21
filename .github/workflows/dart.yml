@@ -16,7 +16,7 @@ jobs:
     - name: 安装Visual Studio构建工具
       uses: microsoft/setup-msbuild@v2
       with:
-        vs-version: '17.0'  # 匹配项目CMake配置所需的MSVC版本
+        vs-version: '17.0'
     
     - name: 安装Flutter
       uses: subosito/flutter-action@v2
@@ -27,21 +27,14 @@ jobs:
       run: flutter config --enable-windows-desktop
     
     - name: 安装项目依赖
-      run: |
-        cd client
-        flutter pub get
+      run: flutter pub get  # 直接在项目根目录执行，无需cd client
     
     - name: 验证Windows构建环境
-      run: |
-        cd client
-        flutter doctor
+      run: flutter doctor
     
     - name: 构建Windows版本
-      run: |
-        cd client
-        flutter build windows --release
+      run: flutter build windows --release
       env:
-        # 配置Windows构建所需的环境变量
         CMAKE_GENERATOR: "Visual Studio 17 2022"
         CMAKE_SYSTEM_VERSION: "10.0.19041.0"
     
@@ -49,7 +42,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: windows-build
-        path: client/build/windows/runner/Release/
+        path: build/windows/runner/Release/  # 调整路径，移除client前缀
 
   build-android:
     runs-on: ubuntu-latest
@@ -69,40 +62,30 @@ jobs:
       with:
         flutter-version: '3.24.3'
     
-    - name: 启用Android支持
-      run: flutter config --enable-android-sdk
+    # 移除无效的flutter config --enable-android-sdk命令
     
     - name: 安装Android SDK
       uses: android-actions/setup-android@v3
       with:
-        # 根据项目gradle配置指定SDK版本
         android-version: 33
         build-tools: 33.0.2
     
     - name: 安装项目依赖
-      run: |
-        cd client
-        flutter pub get
-        flutter pub run build_runner build  # 处理可能的代码生成
+      run: flutter pub get  # 直接在项目根目录执行
     
     - name: 验证Android构建环境
-      run: |
-        cd client
-        flutter doctor
+      run: flutter doctor
     
-    - name: 构建Android App Bundle
-      run: |
-        cd client
-        flutter build appbundle --release
+    - name: 构建Android APK
+      run: flutter build apk --release  # 按README说明构建APK
       env:
-        # 配置Android构建内存参数（匹配gradle.properties）
         GRADLE_OPTS: "-Xmx8G -XX:MaxMetaspaceSize=4G -XX:ReservedCodeCacheSize=512m"
     
     - name: 上传Android构建产物
       uses: actions/upload-artifact@v4
       with:
         name: android-build
-        path: client/build/app/outputs/bundle/release/app-release.aab
+        path: build/app/outputs/flutter-apk/  # 按README说明的路径上传
 
   build-linux:
     runs-on: ubuntu-latest
@@ -123,21 +106,17 @@ jobs:
     - name: 启用Linux桌面支持
       run: flutter config --enable-linux-desktop
     
-    - name: 安装依赖
-      run: |
-        cd client
-        flutter pub get
+    - name: 安装项目依赖
+      run: flutter pub get  # 直接在项目根目录执行
     
     - name: 构建Linux版本
-      run: |
-        cd client
-        flutter build linux --release
+      run: flutter build linux --release
     
     - name: 上传Linux构建产物
       uses: actions/upload-artifact@v4
       with:
         name: linux-build
-        path: client/build/linux/x64/release/bundle/
+        path: build/linux/x64/release/bundle/  # 调整路径，移除client前缀
 
   build-macos:
     runs-on: macos-latest
@@ -153,18 +132,14 @@ jobs:
     - name: 启用macOS桌面支持
       run: flutter config --enable-macos-desktop
     
-    - name: 安装依赖
-      run: |
-        cd client
-        flutter pub get
+    - name: 安装项目依赖
+      run: flutter pub get  # 直接在项目根目录执行
     
     - name: 构建macOS版本
-      run: |
-        cd client
-        flutter build macos --release
+      run: flutter build macos --release
     
     - name: 上传macOS构建产物
       uses: actions/upload-artifact@v4
       with:
         name: macos-build
-        path: client/build/macos/Build/Products/Release/
+        path: build/macos/Build/Products/Release/  # 调整路径，移除client前缀
