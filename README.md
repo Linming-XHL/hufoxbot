@@ -4,29 +4,13 @@
 
 ## 项目介绍
 
-这是一个纯客户端的AI应用，无需网络连接即可使用。应用采用Flutter框架开发，支持跨平台运行在Windows、Linux和Android系统上。
+这是一个纯客户端的AI应用。应用采用Flutter框架开发，支持跨平台运行在Windows、Linux和Android系统上。
 
 ## 主要特点
 
-- **离线运行**：无需网络连接，保护用户隐私
 - **跨平台支持**：支持Windows、Linux和Android系统
 - **简洁界面**：采用Material Design 3设计风格
 - **易于扩展**：模块化架构，方便后续功能扩展
-
-## 项目结构
-
-```
-foxbot-adult/
-├── client/                  # Flutter客户端
-│   ├── lib/                # Dart源代码
-│   │   ├── main.dart       # 应用入口
-│   │   └── src/            # 源代码目录
-│   │       ├── pages/      # 页面组件
-│   ├── assets/             # 资源文件
-│   ├── test/               # 测试文件
-│   └── pubspec.yaml        # Flutter配置文件
-└── README.md               # 项目说明
-```
 
 ## 安装与运行
 
@@ -94,19 +78,6 @@ flutter build apk
 ```
 
 构建后的APK文件位于：`client/build/app/outputs/flutter-apk/`
-
-## 功能说明
-
-当前版本实现了基本的AI响应功能：
-- 点击"获取AI响应"按钮
-- 应用模拟AI思考过程
-- 显示AI响应结果
-
-后续可以扩展的功能：
-- 实现真正的离线AI模型集成
-- 添加更多交互功能
-- 支持自定义AI参数
-- 添加数据持久化功能
 
 ## 开发说明
 
