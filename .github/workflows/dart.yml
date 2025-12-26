@@ -1,0 +1,145 @@
+name: 构建多平台客户端
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: 安装Visual Studio构建工具
+      uses: microsoft/setup-msbuild@v2
+      with:
+        vs-version: '17.0'
+    
+    - name: 安装Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.3'
+    
+    - name: 启用Windows桌面支持
+      run: flutter config --enable-windows-desktop
+    
+    - name: 安装项目依赖
+      run: flutter pub get  # 直接在项目根目录执行，无需cd client
+    
+    - name: 验证Windows构建环境
+      run: flutter doctor
+    
+    - name: 构建Windows版本
+      run: flutter build windows --release
+      env:
+        CMAKE_GENERATOR: "Visual Studio 17 2022"
+        CMAKE_SYSTEM_VERSION: "10.0.19041.0"
+    
+    - name: 上传Windows构建产物
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-build
+        path: build/windows/runner/Release/  # 调整路径，移除client前缀
+
+  build-android:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: 安装Java 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+    
+    - name: 安装Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.3'
+    
+    # 移除无效的flutter config --enable-android-sdk命令
+    
+    - name: 安装Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        android-version: 33
+        build-tools: 33.0.2
+    
+    - name: 安装项目依赖
+      run: flutter pub get  # 直接在项目根目录执行
+    
+    - name: 验证Android构建环境
+      run: flutter doctor
+    
+    - name: 构建Android APK
+      run: flutter build apk --release  # 按README说明构建APK
+      env:
+        GRADLE_OPTS: "-Xmx8G -XX:MaxMetaspaceSize=4G -XX:ReservedCodeCacheSize=512m"
+    
+    - name: 上传Android构建产物
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-build
+        path: build/app/outputs/flutter-apk/  # 按README说明的路径上传
+
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: 安装系统依赖
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+    
+    - name: 安装Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.3'
+    
+    - name: 启用Linux桌面支持
+      run: flutter config --enable-linux-desktop
+    
+    - name: 安装项目依赖
+      run: flutter pub get  # 直接在项目根目录执行
+    
+    - name: 构建Linux版本
+      run: flutter build linux --release
+    
+    - name: 上传Linux构建产物
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-build
+        path: build/linux/x64/release/bundle/  # 调整路径，移除client前缀
+
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: 安装Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.3'
+    
+    - name: 启用macOS桌面支持
+      run: flutter config --enable-macos-desktop
+    
+    - name: 安装项目依赖
+      run: flutter pub get  # 直接在项目根目录执行
+    
+    - name: 构建macOS版本
+      run: flutter build macos --release
+    
+    - name: 上传macOS构建产物
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-build
+        path: build/macos/Build/Products/Release/  # 调整路径，移除client前缀
