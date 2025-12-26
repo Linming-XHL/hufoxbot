@@ -111,4 +111,4 @@ foxhu_bot_offline/
 
 ---
 
-*狐狐伯特 - Offline节点 © 2024*
+*狐狐伯特 - Offline节点 © 2025*
