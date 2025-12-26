@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="foxhu_bot_offline"
+        android:label="狐狐伯特 - Offline节点"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

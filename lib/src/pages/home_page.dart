@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
 
     try {
       // 准备上下文
-      final contextLength = await StorageService.getContextLength();
+      final contextLength = await StorageService.getContextMaxSize();
       final context = _prepareContext(contextLength);
 
       // 使用OpenAI服务获取流式响应
@@ -117,10 +117,6 @@ class _HomePageState extends State<HomePage> {
           );
         });
       }
-      
-      // 更新AI记忆
-      final aiResponse = _messages[_messages.length - 1].content;
-      await _updateAIMemory(userMessage, aiResponse);
       
       // 保存聊天记录
       await _saveChatHistory();
@@ -143,41 +139,35 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // 更新AI记忆
-  Future<void> _updateAIMemory(String userMessage, String aiResponse) async {
-    try {
-      // 获取当前记忆
-      final currentMemory = await StorageService.getAIMemory() ?? '';
-      
-      // 构建新的记忆内容，保留最新的对话记录
-      // 限制记忆长度，避免内存过大
-      final newMemoryEntry = '用户: $userMessage\nAI: $aiResponse\n';
-      final updatedMemory = (currentMemory + newMemoryEntry).substring(math.max(0, (currentMemory + newMemoryEntry).length - 1000));
-      
-      // 保存更新后的记忆
-      await StorageService.saveAIMemory(updatedMemory);
-    } catch (e) {
-      // 记忆更新失败不影响主流程
-      debugPrint('更新AI记忆失败: $e');
-    }
-  }
-
-  // 准备上下文消息
-  List<Map<String, dynamic>> _prepareContext(int contextLength) {
-    if (contextLength <= 0) return [];
+  // 准备上下文消息（基于数据大小）
+  List<Map<String, dynamic>> _prepareContext(int maxSizeKB) {
+    if (maxSizeKB <= 0) return [];
     
     final context = <Map<String, dynamic>>[];
-    final startIndex = math.max(0, _messages.length - contextLength * 2);
+    int totalSize = 0;
     
-    for (int i = startIndex; i < _messages.length; i++) {
+    for (int i = 0; i < _messages.length; i++) {
       final message = _messages[i];
-      context.add({
+      final messageData = {
         'role': message.isUser ? 'user' : 'assistant',
         'content': message.content,
-      });
+      };
+      final messageYaml = _toYamlLine(messageData);
+      final messageSize = messageYaml.length;
+      
+      if (totalSize + messageSize > maxSizeKB * 1024) {
+        break;
+      }
+      
+      context.add(messageData);
+      totalSize += messageSize;
     }
     
     return context;
+  }
+  
+  String _toYamlLine(Map<String, dynamic> msg) {
+    return '- role: ${msg['role']}\n  content: |\n${(msg['content'] as String).split('\n').map((line) => '    $line').join('\n')}\n';
   }
 
   void _showMenu() {
@@ -219,7 +209,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // 删除指定的消息
+  // 删除指定的消息（同时删除用户和AI的消息对）
   void _deleteMessage(int index) {
     showDialog(
       context: context,
@@ -240,9 +230,25 @@ class _HomePageState extends State<HomePage> {
     ).then((confirmed) {
       if (confirmed == true && mounted) {
         setState(() {
-          _messages.removeAt(index);
+          final indicesToRemove = <int>{};
+          
+          if (_messages[index].isUser) {
+            indicesToRemove.add(index);
+            if (index + 1 < _messages.length && !_messages[index + 1].isUser) {
+              indicesToRemove.add(index + 1);
+            }
+          } else {
+            if (index - 1 >= 0 && _messages[index - 1].isUser) {
+              indicesToRemove.add(index - 1);
+            }
+            indicesToRemove.add(index);
+          }
+          
+          final sortedIndices = indicesToRemove.toList()..sort((a, b) => b.compareTo(a));
+          for (final idx in sortedIndices) {
+            _messages.removeAt(idx);
+          }
         });
-        // 保存更新后的聊天记录
         _saveChatHistory();
       }
     });

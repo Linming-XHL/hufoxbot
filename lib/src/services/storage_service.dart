@@ -1,13 +1,11 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StorageService {
-  // 常量键名
   static const String _keyFirstUse = 'first_use';
   static const String _keyApiUrl = 'api_url';
   static const String _keyApiKey = 'api_key';
   static const String _keyModelName = 'model_name';
-  static const String _keyContextLength = 'context_length';
-  static const String _keyAIMemory = 'ai_memory';
+  static const String _keyContextLength = 'context_max_size';
   static const String _keyChatHistory = 'chat_history';
 
 
@@ -70,37 +68,17 @@ class StorageService {
     await setFirstUse(true);
   }
 
-  // 保存上下文长度（2-7条）
-  static Future<void> saveContextLength(int length) async {
-    // 确保上下文长度在2-7之间
-    final validLength = length.clamp(2, 7);
+  // 保存上下文最大数据大小（8-128 KB）
+  static Future<void> saveContextMaxSize(int sizeKB) async {
+    final validSize = sizeKB.clamp(8, 128);
     final prefs = await _getPrefs();
-    await prefs.setInt(_keyContextLength, validLength);
+    await prefs.setInt(_keyContextLength, validSize);
   }
 
-  // 获取上下文长度
-  static Future<int> getContextLength() async {
+  // 获取上下文最大数据大小
+  static Future<int> getContextMaxSize() async {
     final prefs = await _getPrefs();
-    // 默认上下文长度为4
-    return prefs.getInt(_keyContextLength) ?? 4;
-  }
-
-  // 保存AI记忆
-  static Future<void> saveAIMemory(String memory) async {
-    final prefs = await _getPrefs();
-    await prefs.setString(_keyAIMemory, memory);
-  }
-
-  // 获取AI记忆
-  static Future<String?> getAIMemory() async {
-    final prefs = await _getPrefs();
-    return prefs.getString(_keyAIMemory);
-  }
-
-  // 清除AI记忆
-  static Future<void> clearAIMemory() async {
-    final prefs = await _getPrefs();
-    await prefs.remove(_keyAIMemory);
+    return prefs.getInt(_keyContextLength) ?? 64;
   }
 
   // 保存聊天记录
@@ -117,6 +95,12 @@ class StorageService {
 
   // 清除聊天记录
   static Future<void> clearChatHistory() async {
+    final prefs = await _getPrefs();
+    await prefs.remove(_keyChatHistory);
+  }
+
+  // 清除所有数据（保留API配置）
+  static Future<void> clearAllData() async {
     final prefs = await _getPrefs();
     await prefs.remove(_keyChatHistory);
   }

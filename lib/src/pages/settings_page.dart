@@ -14,7 +14,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _apiUrlController = TextEditingController();
   final TextEditingController _apiKeyController = TextEditingController();
   final TextEditingController _modelNameController = TextEditingController();
-  int _contextLength = 4;
+  int _contextMaxSize = 64;
   bool _isSaving = false;
   bool _isLoading = true;
 
@@ -33,8 +33,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _modelNameController.text = config['modelName']!;
       }
 
-      // 加载上下文长度设置
-      _contextLength = await StorageService.getContextLength();
+      _contextMaxSize = await StorageService.getContextMaxSize();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -55,21 +54,18 @@ class _SettingsPageState extends State<SettingsPage> {
       });
 
       try {
-        // 保存API配置信息
         await StorageService.saveApiConfig(
           apiUrl: _apiUrlController.text.trim(),
           apiKey: _apiKeyController.text.trim(),
           modelName: _modelNameController.text.trim(),
         );
 
-        // 保存上下文长度设置
-        await StorageService.saveContextLength(_contextLength);
+        await StorageService.saveContextMaxSize(_contextMaxSize);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('配置已保存')),
           );
-          // 返回上一页
           Navigator.pop(context);
         }
       } catch (e) {
@@ -83,71 +79,6 @@ class _SettingsPageState extends State<SettingsPage> {
           _isSaving = false;
         });
       }
-    }
-  }
-
-  Future<void> _clearAIMemory() async {
-    try {
-      // 获取当前AI记忆
-      final memory = await StorageService.getAIMemory();
-      String confirmationMessage = '确定要清除AI记忆吗？此操作不可恢复。';
-      
-      // 如果有记忆，调用AI生成挽留文本
-      if (memory != null && memory.isNotEmpty) {
-        setState(() {
-          _isLoading = true;
-        });
-        
-        // 调用AI生成挽留文本
-        final prompt = '请帮我生成一段简短的提示语，用于确认是否要清除AI记忆。提示语要友好、有挽留性，不要太长。以下是当前的记忆内容：\n$memory';
-        final retentionMessage = await OpenAIService.getAIResponse(prompt);
-        confirmationMessage = retentionMessage;
-        
-        setState(() {
-          _isLoading = false;
-        });
-      }
-      
-      // 二次确认对话框
-      if (!mounted) return;
-      
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('清除AI记忆'),
-          content: Text(confirmationMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('取消'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('确认清除', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        ),
-      ) ?? false;
-      
-      // 如果用户确认，清除记忆
-      if (confirmed) {
-        await StorageService.clearAIMemory();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('AI记忆已清除')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('清除记忆失败: $e')),
-        );
-      }
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
@@ -229,32 +160,26 @@ class _SettingsPageState extends State<SettingsPage> {
 
                     const SizedBox(height: 24),
 
-                    // 上下文长度设置
                     const Text(
-                      '上下文长度设置',
+                      '上下文最大数据大小',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '上下文长度: $_contextLength 条',
+                      '最大数据大小: $_contextMaxSize KB',
                       style: const TextStyle(fontSize: 16),
                     ),
                     Slider(
-                      value: _contextLength.toDouble(),
-                      min: 2,
-                      max: 7,
-                      divisions: 5,
+                      value: _contextMaxSize.toDouble(),
+                      min: 8,
+                      max: 128,
+                      divisions: 15,
                       onChanged: (value) {
                         setState(() {
-                          _contextLength = value.toInt();
+                          _contextMaxSize = value.toInt();
                         });
                       },
                     ),
-                    const Text(
-                      '设置AI可以记住的历史消息数量（2-7条）',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-
                     const SizedBox(height: 32),
 
                     // 保存按钮
@@ -271,27 +196,83 @@ class _SettingsPageState extends State<SettingsPage> {
                             : const Text('保存配置'),
                       ),
                     ),
+                    const SizedBox(height: 32),
+                    const Divider(),
                     const SizedBox(height: 16),
-                    
-                    // 清除记忆按钮
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton(
-                        onPressed: _clearAIMemory,
+                        onPressed: () => _clearContext(context),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          textStyle: const TextStyle(fontSize: 18),
-                          foregroundColor: Colors.red,
                           side: const BorderSide(color: Colors.red),
                         ),
-                        child: const Text('清除AI记忆'),
+                        child: const Text(
+                          '清空上下文',
+                          style: TextStyle(color: Colors.red),
+                        ),
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      '清除所有聊天记录，包括用户和AI的消息',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
               ),
             ),
     );
+  }
+
+  Future<void> _clearContext(BuildContext context) async {
+    String farewellMessage = '确定要清空所有聊天记录吗？此操作不可恢复。';
+
+    try {
+      final config = await StorageService.getApiConfig();
+      if (config != null && mounted) {
+        farewellMessage = await OpenAIService.getFarewellMessage();
+      }
+    } catch (e) {
+      farewellMessage = '确定要清空所有聊天记录吗？此操作不可恢复。';
+    }
+
+    if (!mounted) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('确认清空'),
+        content: Text(farewellMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('清空'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await StorageService.clearAllData();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('上下文已清空')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('清空失败: $e')),
+          );
+        }
+      }
+    }
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:foxhu_bot_offline/src/pages/home_page.dart';
 import 'package:foxhu_bot_offline/src/pages/api_config_page.dart';
+import 'package:foxhu_bot_offline/src/pages/developer_page.dart';
 import 'package:foxhu_bot_offline/src/services/storage_service.dart';
 
 void main() {
@@ -56,6 +57,21 @@ class _MyAppState extends State<MyApp> {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
+      routes: {
+        '/about': (context) => const Scaffold(
+          body: Center(
+            child: Text('关于页面'),
+          ),
+        ),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/developer') {
+          return MaterialPageRoute(
+            builder: (context) => const DeveloperPage(),
+          );
+        }
+        return null;
+      },
       // 根据是否是第一次使用导航到不同页面
       home: _isFirstUse ? const ApiConfigPage() : const HomePage(),
     );
